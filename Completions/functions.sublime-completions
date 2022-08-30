@@ -1,0 +1,22 @@
+{
+    "scope": "source.sol meta.function.sol meta.block.sol",
+
+    "completions": [
+        {
+            "trigger": "require", "contents": "require(${1}, \"${2}\");",
+            "annotation": "require", "kind": "function"
+        },
+        {
+            "trigger": "assert", "contents": "assert(${1});",
+            "annotation": "assert", "kind": "function"
+        },
+        {
+            "trigger": "address", "contents": "address${1:(${2:0})}",
+            "annotation": "address", "kind": "type"
+        },
+        {
+            "trigger": "emit", "contents": "emit ${1:EventName}(${2})",
+            "annotation": "emit", "kind": ["keyword", "e", "Event"]
+        },
+    ]
+}

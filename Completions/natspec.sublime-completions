@@ -1,0 +1,22 @@
+{
+    "scope": "source.sol & (comment.line.documentation.sol | comment.block.documentation.sol)",
+
+    "completions": [
+        {
+            "trigger": "notice", "contents": "notice ${1:Explain to an end user what this does}",
+            "annotation": "notice natspec", "kind": ["markup", "m", "Natspec"]
+        },
+        {
+            "trigger": "dev", "contents": "dev ${1:Explain to a developer any extra details}",
+            "annotation": "dev natspec", "kind": ["markup", "m", "Natspec"]
+        },
+        {
+            "trigger": "param", "contents": "param ${1:parameter} ${2:Description}",
+            "annotation": "param natspec", "kind": ["markup", "m", "Natspec"]
+        },
+        {
+            "trigger": "return", "contents": "return ${1:parameter} ${2:Description}",
+            "annotation": "return natspec", "kind": ["markup", "m", "Natspec"]
+        },
+    ]
+}

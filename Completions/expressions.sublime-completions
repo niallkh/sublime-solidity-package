@@ -1,0 +1,37 @@
+{
+    "scope": "source.sol meta.block.sol",
+
+    "completions": [
+    	{
+    	    "trigger": "memory", "contents": "memory",
+    	    "annotation": "memory modifier", "kind": ["keyword", "m", "Modifier"]
+    	},
+    	{
+    	    "trigger": "storage", "contents": "storage",
+    	    "annotation": "storage modifier", "kind": ["keyword", "m", "Modifier"]
+    	},
+    	
+    	{
+    	    "trigger": "msg", "contents": "msg.sender",
+    	    "annotation": "msg.sender", "kind": ["variable", "v", "Variable"]
+    	},
+    	
+    	{
+    	    "trigger": "require", "contents": "require(${1}, \"${2}\");",
+    	    "annotation": "require", "kind": ["function", "f", "Function"]
+    	},
+    	{
+    	    "trigger": "assert", "contents": "assert(${1});",
+    	    "annotation": "require", "kind": ["function", "f", "Function"]
+    	},
+    	{
+    	    "trigger": "revert", "contents": "revert(\"${1}\");",
+    	    "annotation": "revert", "kind": ["function", "f", "Function"]
+    	},
+    	{
+    	    "trigger": "address", "contents": "address(this)",
+    	    "annotation": "address(this)", "kind": ["function", "f", "Function"]
+    	},
+
+	]
+}	

@@ -1,0 +1,1639 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+name: Solidity
+scope: source.sol
+version: 2
+first_line_match: ^pragma solidity
+
+file_extensions:
+  - sol
+
+variables:
+
+  reserved_keyword: |-
+    (?x: after|alias|apply|auto|byte|case|copyof|default|define|final|implements|inline|let|macro|match|mutable|null|of|partial|promise|reference|relocatable|sealed|sizeof|static|supports|switch|typedef|typeof|var)
+  statement_keyword: |-
+    (?x: return|if|for|while|do|try|emit|assembly|unchecked|break|continue|as|is|abstract|new)
+  declaration_keyword: |-
+    (?x: pragma|import|using|function|contract|interface|library|struct|enum|event|modifier|constructor|receive|fallback|returns)
+  constant_keyword: |-
+    (?x: true|false|this|super)
+  modifier_keyword: |-
+    (?x: public|private|external|internal|virtual|override|calldata|memory|storage|pure|view|payable|constant|immutable|anonymous|returns)
+
+  numbers_type: |-
+    (?x: u?int8|u?int16|u?int24|u?int32|u?int40|u?int48|u?int56|u?int64|u?int72|u?int80|u?int88|u?int96|u?int104|u?int112|u?int120|u?int128|u?int136|u?int144|u?int152|u?int160|u?int168|u?int176|u?int184|u?int192|u?int200|u?int208|u?int216|u?int224|u?int232|u?int240|u?int248|u?int256|u?int)
+  bytes_type: |-
+    (?x: bytes?|bytes1|bytes2|bytes3|bytes4|bytes5|bytes6|bytes7|bytes8|bytes9|bytes10|bytes11|bytes12|bytes13|bytes14|bytes15|bytes16|bytes17|bytes18|bytes19|bytes20|bytes21|bytes22|bytes23|bytes24|bytes25|bytes26|bytes27|bytes28|bytes29|bytes30|bytes31|bytes32)
+  elementary_type: |-
+    (?x: address\s+payable|address|bool|string|fixed|ufixed|{{numbers_type}}|{{bytes_type}})
+
+  keyword: |-
+    (?x:
+      {{reserved_keyword}}
+    | {{statement_keyword}}
+    | {{declaration_keyword}}
+    | {{constant_keyword}}
+    | {{elementary_type}}
+    | {{modifier_keyword}}
+    | mapping)
+
+
+  id_first_char: '[a-zA-Z$_]'
+  id_char: '[a-zA-Z0-9$_]'
+  id_char_lc: '[a-z$_]'
+  id_char_uc: '[A-Z]'
+  br: (?!{{id_char}})
+  identifier: '(?!{{keyword}}\b){{id_first_char}}{{id_char}}*'
+  type_identifier: '[A-Z]{{id_char}}*'
+  const_identifier: '[A-Z][A-Z_$]*'
+
+  double_quoted_printable: '[ -!#-\[\]-~]'
+  single_quoted_printable: '[ -&(-\[\]-~]'
+
+  number_unit: |-
+    (?x: wei|gwei|ether|seconds|minutes|hours|days|weeks|years)
+
+  assignments: (<<|>>>?|[-+*/%|&\^\:])=
+  logical_operators: |-
+    (?x: \|\||&&)
+  comparison_operators: |-
+    (?x: ==|!=|<=|>=|<|>)
+  bitwise_operators: |-
+    (?x: &|\||\^|<<|>>|>>>)
+  math_operators: |-
+    (?x: \+|-|\*|/|%)
+  word_operators: |-
+    (?x: delete)
+  other_operators: |-
+    (?x: \!|\~)
+
+contexts:
+  prototype:
+    - include: comments
+
+  main:
+    - include: source
+
+  source:
+    - include: pragmas
+    - include: import-directives
+    - include: using-directives
+    - include: definitions
+    - include: statements
+
+  definitions:
+    - include: contract-definitions
+    - include: interface-definitions
+    - include: library-definitions
+    - include: constructor-definitions
+    - include: using-directives
+    - include: fallback-definition
+    - include: receive-definition
+    - include: function-definitions
+    - include: modifier-definitions
+    - include: struct-definitions
+    - include: enum-definitions
+    - include: event-definitions
+    - include: error-definitions
+    - include: user-defined-value-type-definitions
+    - include: state-variable-declarations
+
+  statements:
+    - include: blocks
+    - include: semicolons
+    - include: if-else-statements
+    - include: do-while-statements
+    - include: keyword-statements
+    - include: for-statements
+    - include: try-catch-statements
+    - include: expressions
+
+  expressions:
+    - include: tuple-expressions
+    - include: array-expressions
+    - include: literals
+    - include: operators
+    - include: instantiations
+    - include: identifiers
+    - include: type-names
+
+    - include: else-invalid-word
+    - include: else-invalid-symbol
+    # - include: else-next-word
+
+  expression:
+    - match: (?=[\)\}\]\,\;]|returns\b)
+      pop: true
+    - include: expressions
+
+  block-or-statement:
+    - match: (?=\;)
+      pop: true
+    - include: block
+    - include: statements
+
+###[ DIRECTIVES ]###
+
+  pragmas:
+    - match: pragma\b
+      scope: keyword.control.import-pragma.sol
+      push:
+        - pragma-meta
+        - pragma-tokens
+
+  pragma-meta:
+    - meta_scope: meta.pragma.sol
+    - include: else-pop-immediately
+
+  pragma-tokens:
+    - match: ([\S&&[^;]]+)
+      scope: keyword.control.import-pragma-token.sol
+    - include: semicolon
+
+  import-directives:
+    - match: import\b
+      scope: keyword.control.import.sol
+      push:
+        - import-meta
+        - semicolon
+        - import-directive
+
+  import-meta:
+    - meta_scope: meta.import.sol
+    - include: else-pop-immediately
+
+  import-directive:
+    - match: (?=\"|\')
+      set:
+        - import-as
+        - import-path
+    - match: \*
+      scope: variable.language.wildcard.asterisk.sol
+      set:
+        - import-from
+        - import-as
+    - match: \{
+      scope: punctuation.section.braces.begin.sol
+      set:
+        - import-from
+        - import-symbol-alias-body
+        - import-symbol-alias
+    - include: else-pop
+
+  import-path:
+    - match: \"
+      scope: punctuation.definition.string.begin.sol
+      set: literals-string-double-quoted
+    - match: \'
+      scope: punctuation.definition.string.begin.sol
+      set: literals-string-single-quoted
+    - include: else-pop
+
+  import-as:
+    - match: as\b
+      scope: keyword.control.as.sol
+      set: import-identifier-name
+    - include: else-pop
+
+  import-from:
+    - match: from\b
+      scope: keyword.control.import-from.sol
+      set: import-path
+    - include: else-pop
+
+  import-symbol-alias:
+    - match: ''
+      set:
+        - import-as
+        - import-identifier-path-name
+
+  import-symbol-alias-body:
+    - meta_scope: meta.braces.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: import-symbol-alias
+    - include: else-pop-invalid
+
+  import-identifier-path-name:
+    - match: ({{identifier}})(\.)
+      captures:
+        1: support.type.sol
+        2: punctuation.accessor.dot.sol
+    - include: import-identifier-name
+
+  import-identifier-name:
+    - match: ({{identifier}}){{br}}
+      scope: support.type.sol
+      pop: true
+    - include: else-pop
+
+  using-directives:
+    - match: using\b
+      scope: keyword.control.using.sol
+      push:
+        - using-meta
+        - semicolon
+        - using-for
+        - using-identifiers
+
+  using-meta:
+    - meta_scope: meta.using.sol
+    - include: else-pop-immediately
+
+  using-identifiers:
+    - match: \{
+      scope: punctuation.section.braces.begin.sol
+      set:
+        - using-identifiers-body
+        - using-identifier-name
+    - include: using-identifier-name
+
+  using-identifiers-body:
+    - meta_scope: meta.braces.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: using-identifier-name
+    - include: else-invalid-symbol
+
+  using-identifier-name:
+    - match: ({{identifier}})\s*(\.)
+      captures:
+        1: support.type.sol
+        2: punctuation.accessor.dot.sol
+    - match: ({{identifier}}){{br}}
+      scope: support.type.sol
+      pop: true
+    - include: else-pop
+
+  using-for:
+    - match: for\b
+      scope: keyword.control.using-for.sol
+      set:
+        - using-global-optional
+        - using-type-name
+    - include: else-pop
+
+  using-type-name:
+    - match: \*
+      scope: variable.language.wildcard.asterisk.sol
+      pop: true
+    - include: type-names
+    - include: else-invalid-word
+    - include: else-pop
+
+  using-global-optional:
+    - match: global\b
+      scope: storage.modifier.sol
+      pop: true
+    - include: else-pop
+
+###[ DEFINITIONS ]###
+
+  contract-definitions:
+    - match: abstract\b
+      scope: storage.type.contract.sol keyword.declaration.contract.sol
+    - match: contract\b
+      scope: storage.type.contract.sol keyword.declaration.contract.sol
+      push:
+        - contract-meta
+        - contract-block
+        - contract-inheritance
+        - contract-name
+
+  contract-meta:
+    - meta_scope: meta.contract.sol
+    - include: else-pop-immediately
+
+  contract-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.class.sol
+      pop: true
+    - include: else-pop
+
+  interface-definitions:
+    - match: interface\b
+      scope: storage.type.interface.sol keyword.declaration.interface.sol
+      push:
+        - interface-meta
+        - contract-block
+        - contract-inheritance
+        - interface-name
+
+  interface-meta:
+    - meta_scope: meta.interface.sol
+    - include: else-pop-immediately
+
+  interface-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.interface.sol
+      pop: true
+    - include: else-pop
+
+  library-definitions:
+    - match: library\b
+      scope: storage.type.library.sol keyword.declaration.library.sol
+      push:
+        - contract-meta
+        - contract-block
+        - contract-inheritance
+        - library-name
+
+  library-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.class.sol
+      pop: true
+    - include: else-pop
+
+  contract-block:
+    - match: \{
+      scope: punctuation.section.block.begin.sol
+      pop: true
+      set:
+        - contract-block-body
+
+  contract-block-body:
+    - meta_scope: meta.block.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - include: definitions
+    - include: else-invalid-symbol
+
+  contract-inheritance:
+    - match: is\b
+      scope: keyword.control.extends.sol
+      set:
+        - inheritance-names-body
+        - function-call-arguments-optional
+        - inheritance-name
+    - include: else-pop
+
+  inheritance-names-body:
+    - match: \,
+      scope: punctuation.separator.sol
+      push:
+        - function-call-arguments-optional
+        - inheritance-name
+    - include: else-pop
+
+  inheritance-name:
+    - match: ({{identifier}})\s*(\.)
+      captures:
+        1: entity.other.inherited-class.sol
+        2: punctuation.accessor.dot.sol
+    - match: ({{identifier}}){{br}}
+      scope: entity.other.inherited-class.sol
+      pop: true
+    - include: else-pop
+
+  state-variable-declarations:
+    - match: (?={{id_first_char}})
+      branch_point: variable
+      branch:
+        - state-variable
+        - state-variable-const
+
+  state-variable:
+    - match: ''
+      set:
+        - semicolon
+        - state-variable-assignment
+        - state-variable-name
+        - override-specifier
+        - state-variable-modifiers
+        - type-name
+
+  state-variable-const:
+    - match: ''
+      set:
+        - semicolon
+        - state-variable-assignment
+        - state-variable-const-name
+        - state-variable-const-modifier
+        - type-name
+
+  state-variable-modifiers:
+    - match: (public|private|internal)\b
+      scope: storage.modifier.sol
+    - include: override-specifiers
+    - match: (?=constant|immutable)\b
+      fail: variable
+    - include: else-pop
+
+  state-variable-const-modifier:
+    - match: (public|private|internal)\b
+      scope: storage.modifier.sol
+    - include: override-specifiers
+    - match: (constant|immutable)\b
+      scope: storage.modifier.sol
+    - include: else-pop
+
+  state-variable-name:
+    - match: ({{identifier}}){{br}}
+      scope: meta.variable.state.sol variable.other.member.sol
+      pop: true
+    - include: else-pop
+
+  state-variable-const-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.constant.sol
+      pop: true
+    - include: else-pop
+
+  state-variable-assignment:
+    - match: =
+      scope: keyword.operator.assignment.sol
+      set: expression
+    - include: else-pop
+
+  function-definitions:
+    - match: function\b
+      scope: storage.type.function.sol keyword.declaration.function.sol
+      push:
+        - function-meta
+        - block-or-semicolon
+        - returns
+        - function-modifiers
+        - parameters
+        - function-name
+
+  function-meta:
+    - meta_scope: meta.function.sol
+    - include: else-pop-immediately
+
+  function-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.function.sol
+      pop: true
+    - include: else-pop
+
+  constructor-definitions:
+    - match: constructor\b
+      scope: entity.name.function.sol
+      push:
+        - function-meta
+        - block
+        - constructor-modifiers
+        - parameters
+
+  fallback-definition:
+    - match: fallback\b
+      scope: entity.name.function.fallback.sol
+      push:
+        - function-meta
+        - block
+        - returns
+        - function-modifiers
+        - parameters
+
+  receive-definition:
+    - match: receive\b
+      scope: entity.name.function.receive.sol
+      push:
+        - function-meta
+        - block
+        - function-modifiers
+        - empty-group
+
+  empty-group:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - meta_scope: meta.block.sol
+        - match: \)
+          scope: punctuation.section.group.end.sol
+          pop: true
+        - include: else-invalid-symbol
+    - include: else-pop
+
+  modifier-definitions:
+    - match: modifier\b
+      scope: meta.modifier.sol storage.type.modifier.sol keyword.declaration.modifier.sol
+      push:
+        - function-meta
+        - block
+        - modifier-modifiers
+        - parameters
+        - function-name
+
+  struct-definitions:
+    - match: struct\b
+      scope: meta.struct.sol storage.type.struct.sol keyword.declaration.struct.sol
+      push:
+        - struct-meta
+        - struct-members
+        - struct-name
+
+  struct-meta:
+    - meta_scope: meta.struct.sol
+    - include: else-pop-immediately
+
+  struct-name:
+    - match: ({{identifier}}{{br}})
+      scope: entity.name.struct.sol
+      pop: true
+    - include: else-pop
+
+  struct-members:
+    - match: \{
+      scope: punctuation.section.braces.begin.sol
+      set:
+        - struct-members-body
+        - struct-member
+    - include: else-pop
+
+  struct-member:
+    - match: ''
+      set:
+        - object-key-identifier
+        - type-name
+    - include: else-pop
+
+  struct-members-body:
+    - meta_scope: meta.braces.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - match: ;
+      scope: punctuation.terminator.sol
+      push: struct-member
+    - include: else-invalid-symbol
+
+  enum-definitions:
+    - match: enum\b
+      scope: meta.enum.sol storage.type.enum.sol keyword.declaration.enum.sol
+      push:
+        - enum-meta
+        - enum-members
+        - enum-name
+
+  enum-meta:
+    - meta_scope: meta.enum.sol
+    - include: else-pop-immediately
+
+  enum-name:
+    - match: ({{identifier}}{{br}})
+      scope: entity.name.enum.sol
+      pop: true
+    - include: else-pop
+
+  enum-members:
+    - match: \{
+      scope: punctuation.section.braces.begin.sol
+      set:
+        - enum-members-body
+        - enum-member
+    - include: else-pop
+
+  enum-member:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.constant.sol
+      pop: true
+    - include: else-pop
+
+  enum-members-body:
+    - meta_scope: meta.braces.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - match: \,
+      push:
+        - enum-member
+    - include: else-invalid-symbol
+
+  event-definitions:
+    - match: event\b
+      scope: meta.event.sol storage.type.event.sol keyword.declaration.event.sol
+      push:
+        - event-meta
+        - semicolon
+        - event-modifiers
+        - parameters
+        - event-name
+
+  event-meta:
+    - meta_scope: meta.event.sol
+    - include: else-pop-immediately
+
+  event-modifiers:
+    - match: anonymous\b
+      scope: storage.modifier.sol
+    - include: else-pop
+
+  event-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.enum.sol
+      pop: true
+    - include: else-pop
+
+  error-definitions:
+    - match: error\b
+      scope: meta.error.sol storage.type.error.sol keyword.declaration.error.sol
+      push:
+        - error-meta
+        - semicolon
+        - parameters
+        - error-name
+
+  error-meta:
+    - meta_scope: meta.error.sol
+    - include: else-pop-immediately
+
+  error-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.enum.sol
+      pop: true
+    - include: else-pop
+
+
+
+###[ STATEMENTS ]###
+
+  blocks:
+    - match: \{
+      scope: punctuation.section.block.begin.sol
+      push:
+        - block-body
+
+  block:
+    - match: \{
+      scope: punctuation.section.block.begin.sol
+      set:
+        - block-body
+    - include: else-pop
+
+  block-or-semicolon:
+    - match: \{
+      scope: punctuation.section.block.begin.sol
+      set:
+        - block-body
+    - include: semicolon
+    - include: else-pop
+
+  block-body:
+    - meta_scope: meta.block.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - include: unchecked-blocks
+    - include: assembly-blocks
+    - include: statements
+
+  unchecked-blocks:
+    - match: unchecked\b
+      scope: keyword.context.block.sol
+      push:
+         - block
+
+  assembly-blocks:
+    - match: assembly\b
+      scope: keyword.context.block.sol
+      push: assembly-block
+
+  assembly-block:
+    - match: \{
+      scope: punctuation.section.block.begin.sol
+      set: assembly-block-body
+    - include: else-pop
+
+  assembly-block-body:
+    - meta_scope: meta.block.assembly.sol
+    - match: \}
+      scope: punctuation.section.block.end.sol
+      pop: true
+    - include: scope:source.yul
+    - include: else-invalid-symbol
+
+  if-else-statements:
+    - match: if\b
+      scope: keyword.control.conditional.if.sol
+      push:
+        - block-or-statement
+        - parens-expression
+    - match: (else)\s+(if\b)
+      captures:
+        1: keyword.control.conditional.else.sol
+        2: keyword.control.conditional.if.sol
+      push:
+        - block-or-statement
+        - parens-expression
+    - match: else\b
+      scope: keyword.control.conditional.else.sol
+      push:
+        - block-or-statement
+
+  do-while-statements:
+    - match: while\b
+      scope: keyword.control.loop.while.sol
+      push:
+        - block-or-statement
+        - parens-expression
+    - match: do\b
+      scope: keyword.control.loop.do-while.sol
+      push:
+        - block-or-statement
+
+  keyword-statements:
+    - match: continue\b
+      scope: keyword.control.flow.continue.sol
+    - match: break\b
+      scope: keyword.control.flow.br.sol
+    - match: return\b
+      scope: keyword.control.flow.return.sol
+    - match: emit\b
+      scope: keyword.control.flow.emit.sol
+    - match: revert\b
+      scope: keyword.control.flow.revert.sol
+
+  for-statements:
+    - match: for\b
+      scope: keyword.control.flow.for.sol
+      push:
+        - block-or-statement
+        - for-statements-parens
+
+  for-statements-parens:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - for-statements-parens-body
+        - expression
+    - include: else-pop
+
+  for-statements-parens-body:
+    - meta_scope: meta.parens.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: ;
+      scope: punctuation.terminator.sol
+      push: expression
+    - include: else-invalid-symbol
+
+  try-catch-statements:
+    - match: try\b
+      scope: keyword.control.flow.try.sol
+      push:
+        - block
+        - returns
+        - expression
+    - match: catch\b
+      scope: keyword.control.flow.catch.sol
+      push:
+        - block
+        - parameters
+        - type-name
+
+###[ Expressions ]###
+
+  identifiers:
+    - match: (?={{id_first_char}}|\.)
+      scope: punctuation.accessor.dot.sol
+      branch_point: identifier
+      branch:
+        - function-call
+        - variable-identifier
+
+  else-identifier-fail:
+    - match: (?=\S)
+      fail: identifier
+
+  variable-identifier:
+    - match: (\.)\s*(interfaceId|runtimeCode|creationCode|name|max|min|data|sender|sig|value|min|max|balance|code|codehash|basefee|chainid|coinbase|difficulty|gaslimit|number|timestamp|length|selector)\b
+      scope: support.constant.sol
+      captures:
+        1: punctuation.accessor.dot.sol
+        2: support.constant.sol
+      pop: true
+
+    - match: \.
+      scope: punctuation.accessor.dot.sol
+
+    - match: (this|super|msg|tx|block|abi)\b
+      scope: variable.language.sol
+      pop: true
+    - match: ({{elementary_type}}){{br}}
+      scope: storage.type.value.sol
+      pop: true
+    - match: (calldata|storage|memory)\b
+      scope: storage.modifier.sol
+      pop: true
+    - match: ({{const_identifier}}){{br}}
+      scope: variable.other.constant.sol
+      pop: true
+    - match: ({{type_identifier}}){{br}}
+      scope: support.type.sol
+      pop: true
+    - match: \b_\b
+      scope: keyword.control.sol
+      pop: true
+    - match: ({{identifier}}){{br}}
+      scope: variable.other.readwrite.sol
+      pop: true
+    - include: else-identifier-fail
+    - include: else-pop
+
+  function-call:
+    - match: ''
+      set:
+        - function-call-meta
+        - function-call-arguments-expect
+        - function-call-object-optional
+        - function-call-identifier
+
+  function-call-meta:
+    - meta_scope: meta.function-call.sol
+    - include: else-pop-immediately
+
+  function-call-identifier:
+    - match: \.
+      scope: punctuation.accessor.dot.sol
+
+    - match: (send|transfer|call|delegatecall|staticcall|decode|encodePacked|encode|encodeCall|encodeWithSelector|encodeWithSignature|push|pop|type|concat|gasleft|assert|require|revert|blockhash|keccak256|sha256|repemd160|ecrecover|addmod|mulmod|selfdestruct|payable)\b
+      scope: support.function.sol
+      pop: true
+    - match: '{{elementary_type}}\b'
+      scope: storage.type.value.sol
+      pop: true
+    - match: ({{identifier}}){{br}}
+      scope: variable.function.sol
+      pop: true
+    - include: else-identifier-fail
+
+  function-call-arguments-expect:
+    - include: function-call-arguments
+    - include: else-identifier-fail
+
+  function-call-arguments-optional:
+    - include: function-call-arguments
+    - include: else-pop
+
+  function-call-arguments:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - function-call-arguments-body
+        - expression
+        - function-call-object-optional
+
+  function-call-arguments-body:
+    - meta_scope: meta.group.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: expression
+    - include: else-invalid-symbol
+
+  function-call-object-optional:
+    - match: \{
+      scope: punctuation.section.braces.begin.sol
+      set:
+        - function-call-object-body
+        - object-key-value
+    - include: else-pop
+
+  function-call-object-body:
+    - meta_scope: meta.braces.sol
+    - match: \}
+      scope: punctuation.section.braces.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push:
+        - object-key-value
+    - include: else-invalid-symbol
+
+  object-key-value:
+    - match: ''
+      set:
+        - expression
+        - object-key-value-separator
+        - object-key-identifier
+
+  object-key-identifier:
+    - match: ({{identifier}}){{br}}
+      scope: variable.member.sol
+      pop: true
+    - include: else-pop
+
+  object-key-value-separator:
+    - match: (?=\})
+      pop: true
+    - match: ':'
+      scope: punctuation.separator.key-value.sol
+      pop: true
+    - include: else-invalid-symbol
+
+  tuple-expressions:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      push:
+        - tuple-expressions-body
+        - expression
+
+  tuple-expressions-body:
+    - meta_scope: meta.group.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: expression
+    - include: else-invalid-symbol
+
+  array-expressions:
+    - match: \[
+      scope: punctuation.section.brackets.begin.sol
+      push:
+        - array-expressions-body
+        - expression
+
+  array-expressions-body:
+    - meta_scope: meta.brackets.sol
+    - match: \]
+      scope: punctuation.section.brackets.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: expression
+    - include: else-invalid-symbol
+
+  parens-expression:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - parens-expression-body
+        - expression
+    - include: else-invalid-symbol
+
+  parens-expression-body:
+    - meta_scope: meta.parens.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - include: else-invalid-symbol
+
+###[ TYPES ]###
+
+  user-defined-value-type-definitions:
+    - match: type\b
+      scope: meta.type.sol storage.type.sol keyword.declaration.type.sol
+      push:
+        - type-meta
+        - user-defined-value-type-definitions-is
+        - definition-type-name
+
+  type-meta:
+    - meta_scope: meta.type.sol
+    - include: else-pop-immediately
+
+  user-defined-value-type-definitions-is:
+    - match: is\b
+      scope: keyword.control.sol
+      set: elementary-type-optional
+    - include: else-pop
+
+  elementary-type-optional:
+    - include: elementary-type
+    - include: else-pop
+
+  definition-type-name:
+    - match: ({{identifier}}){{br}}
+      scope: entity.name.type.sol
+      pop: true
+    - include: else-pop
+
+  type-name:
+    - include: type-names
+    - include: else-pop
+
+  type-names:
+    - match: (?={{id_first_char}})
+      branch_point: type
+      branch:
+        - type-function
+        - type-mapping
+        - type-elementary
+        - type-identifier
+
+  else-type-fail:
+    - match: (?=\S)
+      fail: type
+
+  type-arrays:
+    - match: \[
+      scope: punctuation.section.braces.begin.sol
+      push:
+        - type-arrays-body
+        - expression
+    - include: else-pop-2
+
+  type-arrays-body:
+    - meta_scope: meta.brackets.sol
+    - match: \]
+      scope: punctuation.section.brackets.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: expression
+    - include: else-invalid-symbol
+
+  type-elementary:
+    - match: ({{elementary_type}}){{br}}
+      scope: storage.type.value.sol
+      set: type-arrays
+    - include: else-type-fail
+
+  type-identifier:
+    - match: (?={{id_first_char}})
+      set:
+        - type-identifier-body
+    - include: else-type-fail
+
+  type-identifier-body:
+    - match: ({{identifier}})\s*(\.)
+      captures:
+        1: support.type.sol
+        2: punctuation.accessor.dot.sol
+    - match: ({{identifier}}){{br}}
+      scope: support.type.sol
+      set: type-arrays
+    - include: else-type-fail
+
+  type-mapping:
+    - match: mapping\b
+      scope: storage.type.mapping.sol
+      set:
+        - type-mapping-parens
+    - include: else-type-fail
+
+  type-mapping-parens:
+    - match: \(
+      scope: punctuation.section.parens.begin.sol
+      set:
+        - type-mapping-body
+        - type-name
+    - include: else-pop
+
+  type-mapping-body:
+    - meta_scope: meta.parens.sol
+    - match: \)
+      scope: punctuation.section.parens.end.sol
+      pop: 2
+    - match: =>
+      scope: punctuation.separator.key-value.sol
+      push: type-name
+    - include: else-invalid-symbol
+
+  type-function:
+    - match: function\b
+      scope: storage.type.function.sol keyword.declaration.function.sol
+      set:
+        - function-meta
+        - returns
+        - type-function-modifiers
+        - parameters
+    - include: else-type-fail
+
+  type-function-modifiers:
+    - include: function-visibility-modifiers
+    - include: function-state-mutability-modifiers
+    - match: (?=returns\b)
+      pop: true
+    - include: else-next-word
+    - include: else-pop
+
+  returns:
+    - match: returns\b
+      scope: keyword.other.returns.sol
+      set:
+        - parameters
+    - include: else-pop
+
+  parameters:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - parameters-body
+        - parameter
+    - include: else-pop
+
+  parameters-body:
+    - meta_scope: meta.group.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: parameter
+    - include: else-invalid-symbol
+
+  parameter:
+    - match: (?={{id_first_char}})
+      set:
+        - parameter-identifier
+        - parameter-modifier
+        - type-name
+    - include: else-pop
+
+  parameter-modifier:
+    - match: (calldata|memory|storage){{br}}
+      scope: storage.modifier.sol
+    - match: indexed{{br}}
+      scope: storage.modifier.sol
+    - include: else-pop
+
+  parameter-identifier:
+    - match: ({{identifier}}){{br}}
+      scope: variable.parameter.sol
+      pop: true
+    - include: else-invalid-word
+    - include: else-pop
+
+###[ MODIFIERS ]###
+
+  function-modifiers:
+    - include: function-visibility-modifiers
+    - include: function-state-mutability-modifiers
+    - include: function-inheritance-modifiers
+    - include: function-modifier-invokation
+    - match: (?=returns\b)
+      pop: true
+    - include: else-next-word
+    - include: else-pop
+
+  constructor-modifiers:
+    - include: function-visibility-modifiers
+    - include: function-state-mutability-modifiers
+    - include: super-constructor-invokation
+    - include: else-next-word
+    - include: else-pop
+
+  modifier-modifiers:
+    - include: function-inheritance-modifiers
+    - include: else-pop
+
+  function-state-mutability-modifiers:
+    - match: (pure|view|payable)\b
+      scope: storage.modifier.sol
+
+  function-visibility-modifiers:
+    - match: (public|private|external|internal)\b
+      scope: storage.modifier.sol
+
+  function-inheritance-modifiers:
+    - match: virtual\b
+      scope: storage.modifier.sol
+    - include: override-specifiers
+
+  override-specifier:
+    - match: override\b
+      scope: storage.modifier.sol
+      push:
+        - override-specifier-group
+    - include: else-pop
+
+  override-specifiers:
+    - match: override\b
+      scope: storage.modifier.sol
+      push:
+        - override-specifier-group
+
+  override-specifier-group:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - override-specifier-group-body
+        - inheritance-name
+    - include: else-pop
+
+  override-specifier-group-body:
+    - meta_scope: meta.group.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push:
+        - inheritance-name
+    - include: else-invalid-symbol
+
+  function-modifier-invokation:
+    - match: (?={{identifier}})
+      push:
+        - function-call-meta
+        - function-call-arguments-optional
+        - function-modifier-name
+
+  function-modifier-name:
+    - match: ({{identifier}})\s*(\.)
+      captures:
+        1: variable.other.sol
+        2: punctuation.accessor.dot.sol
+    - match: ({{identifier}}){{br}}
+      scope: variable.function.sol
+      pop: true
+
+  super-constructor-invokation:
+    - match: (?={{identifier}})
+      push:
+        - function-call-meta
+        - function-call-arguments-optional
+        - super-constructor-name
+
+  super-constructor-name:
+    - match: ({{identifier}})\s*(\.)
+      captures:
+        1: storage.type.sol
+        2: punctuation.accessor.dot.sol
+    - match: ({{identifier}}){{br}}
+      scope: entity.other.inherited-class.sol
+      pop: true
+
+###[ OPERATORS ]###
+
+  operators:
+    - include: operator-assignment-augmented
+    - include: operator-logical
+    - include: operator-comparison
+    - include: operator-assignment
+    - include: operator-bitwise
+    - include: operator-arithmetic
+    - include: operator-words
+    - include: operator-other
+    - include: operator-ternary
+    - include: operator-ternary-else
+    - include: operator-new
+
+  operator-assignment-augmented:
+    - match: ({{assignments}})
+      scope: keyword.operator.assignment.augmented.sol
+
+  operator-assignment:
+    - match: =
+      scope: keyword.operator.assignment.sol
+
+  operator-logical:
+    - match: ({{logical_operators}})
+      scope: keyword.operator.logical.sol
+
+  operator-comparison:
+    - match: ({{comparison_operators}})
+      scope: keyword.operator.comparison.sol
+
+  operator-bitwise:
+    - match: ({{bitwise_operators}})
+      scope: keyword.operator.bitwise.sol
+
+  operator-arithmetic:
+    - match: ({{math_operators}})
+      scope: keyword.operator.arithmetic.sol
+
+  operator-words:
+    - match: ({{word_operators}})\b
+      scope: keyword.operator.word.sol
+
+  operator-other:
+    - match: ({{other_operators}})
+      scope: keyword.operator.sol
+
+  operator-ternary:
+    - match: \?
+      scope: keyword.operator.ternary.sol
+      push:
+        - expression
+
+  operator-ternary-else:
+    - match: ':'
+      scope: keyword.operator.ternary.sol
+      push:
+        - expression
+
+  operator-new:
+    - match: new\b
+      scope: keyword.operator.word.sol
+
+###[ LITERALS ]###
+
+  literals:
+    - include: literals-string
+    - include: literals-boolean
+    - include: literals-number
+
+  literals-string:
+    - include: literals-string-quoted
+    - include: literals-string-hex
+    - include: literals-string-unicode
+
+  literals-number:
+    - include: literals-number-hex
+    - include: literals-number-decimal
+    - include: literals-number-unit
+
+  literals-boolean:
+    - match: true\b
+      scope: constant.language.boolean.true.sol
+    - match: false\b
+      scope: constant.language.boolean.false.sol
+
+  literals-string-quoted:
+    - match: \"
+      scope: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-double-quoted
+    - match: \'
+      scope: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-single-quoted
+
+  literals-string-hex:
+    - match: (hex)(\")
+      captures:
+        1: constant.numeric.base.sol
+        2: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-hex-number-double-quoted
+    - match: (hex)(\')
+      captures:
+        1: constant.numeric.base.sol
+        2: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-hex-number-single-quoted
+
+  literals-string-unicode:
+    - match: (unicode)(\")
+      captures:
+        1: constant.numeric.base.sol
+        2: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-unicode-double-quoted
+    - match: (unicode)(\')
+      captures:
+        1: constant.numeric.base.so
+        2: punctuation.definition.string.begin.sol
+      push:
+        - string-meta
+        - literals-string-unicode-single-quoted
+
+  string-meta:
+    - meta_scope: meta.string.sol
+    - include: else-pop-immediately
+
+  literals-string-double-quoted:
+    - meta_include_prototype: false
+    - match: ({{double_quoted_printable}})
+      scope: string.quoted.double.sol
+    - match: \"
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: illegal-newline
+    - include: literals-string-escape-sequence
+
+  literals-string-single-quoted:
+    - meta_include_prototype: false
+    - match: ({{single_quoted_printable}})
+      scope: string.quoted.single.sol
+    - match: \'
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: illegal-newline
+    - include: literals-string-escape-sequence
+
+  literals-string-hex-number-double-quoted:
+    - meta_include_prototype: false
+    - match: ([\h_])
+      scope: string.quoted.double.sol
+    - match: \"
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: illegal-newline
+
+  literals-string-hex-number-single-quoted:
+    - meta_include_prototype: false
+    - match: ([\h_])
+      scope: string.quoted.single.sol
+    - match: \'
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: illegal-newline
+
+  literals-string-unicode-single-quoted:
+    - meta_include_prototype: false
+    - match: ([^\"\r\n\\])
+      scope: string.quoted.single.sol
+    - include: literals-string-escape-sequence
+    - match: \'
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: pop-eol
+
+  literals-string-unicode-double-quoted:
+    - meta_include_prototype: false
+    - match: ([^\"\r\n\\])
+      scope: string.quoted.double.sol
+    - include: literals-string-escape-sequence
+    - match: \"
+      scope: punctuation.definition.string.end.sol
+      pop: true
+    - include: pop-eol
+
+  literals-string-escape-sequence:
+    - match: \\(?:x\h\h|u\h\h\h\h)
+      scope: constant.character.escape.sol
+    - match: \\[\'\"\\nrt\n\r]
+      scope: constant.character.escape.sol
+
+  literals-number-decimal:
+    - match: ([\d_]*(\.)[\d_]|\d[\d_]*)([eE]-?[\d_]*)?{{br}}
+      captures:
+        1: constant.numeric.value.sol
+        2: punctuation.separator.decimal.sol
+        3: constant.numeric.value.sol
+
+  literals-number-hex:
+    - match: (0x)([\h_]*){{br}}
+      captures:
+        1: constant.numeric.base.sol
+        2: constant.numeric.value.sol
+
+  literals-number-unit:
+    - match: ({{number_unit}}){{br}}
+      scope: support.constant.sol
+
+
+###[ ELSE ]###
+
+  else-pop-immediately:
+    - match: ''
+      pop: true
+
+  else-pop:
+    - match: (?=\S)
+      pop: true
+
+  else-pop-2:
+    - match: (?=\S)
+      pop: 2
+
+  pop-eol:
+    - match: $
+      pop: true
+
+  else-invalid-word:
+    - match: \w+\b
+      scope: invalid.sol
+
+  else-invalid-symbol:
+    - match: \S
+      scope: invalid.sol
+
+  else-next-word:
+    - match: \w+\b
+      scope:
+
+###[ PUNCTUATION ]###
+
+  semicolons:
+    - match: ;
+      scope: punctuation.terminator.sol
+
+  semicolon:
+    - match: ;
+      scope: punctuation.terminator.sol
+      pop: true
+    - include: else-pop
+
+  illegal-newline:
+    - match: \n
+      scope: invalid.illegal.unexpected-newline.sol
+      pop: true
+
+###[ COMMENTS ]###
+
+  comments:
+    - include: comments-natspec-line
+    - include: comments-line
+    - include: comments-natspec-block
+    - include: comments-inline-block
+
+  comments-line:
+    - match: //
+      scope: punctuation.definition.comment.sol
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.line.sol
+        - match: \n
+          pop: true
+
+  comments-inline-block:
+    - match: /\*
+      scope: punctuation.definition.comment.begin.sol
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.block.sol
+        - match: \*/
+          scope: punctuation.definition.comment.end.sol
+          pop: true
+
+  comments-natspec-line:
+    - match: ///
+      scope: punctuation.definition.comment.sol
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.line.documentation.sol
+        - include: comments-natspec-tags
+        - include: comments-natspec-placeholders
+        - match: \n
+          pop: true
+
+  comments-natspec-block:
+    - match: /\*\*(?!/)
+      scope: punctuation.definition.comment.begin.sol
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.block.documentation.sol
+        - include: comments-natspec-tags
+        - include: comments-natspec-quote-blocks
+        - include: comments-natspec-placeholders
+        - match: \*/
+          scope: punctuation.definition.comment.end.sol
+          pop: true
+
+  comments-natspec-tags:
+    - match: (@custom(:[-{{id_char}}]+)?){{br}}
+      scope: entity.name.tag.documentation.sol
+    - match: (@notice|@dev){{br}}
+      scope: entity.name.tag.documentation.sol
+    - match: (@inheritdoc)(?:\s({{id_char}}+))?{{br}}
+      captures:
+        1: entity.name.tag.documentation.sol
+        2: support.type.sol
+    - match: (@param|@return)(?:\s({{id_char_lc}}{{id_char}}*))?{{br}}
+      captures:
+        1: entity.name.tag.documentation.sol
+        2: variable.parameter.sol
+    - match: (@title)\s+(.*)$
+      captures:
+        1: entity.name.tag.documentation.sol
+        2: markup.heading.sol
+    - match: (@author)\s+(.*)$
+      captures:
+        1: entity.name.tag.documentation.sol
+        2: markup.underline.sol
+    - match: (@solidity)\s+(.*)$
+      captures:
+        1: entity.name.tag.documentation.sol
+        2: markup.underline.sol
+    - match: (TIP|CAUTION|MUST NOT|MUST|NOTE|SHOULD|MAY)\b
+      scope: markup.bold.sol
+
+  comments-natspec-placeholders:
+    # - match: https?://[^\s/$.?#].[^\s]*
+    #   scope: markup.underline.link.sol
+    - match: '(``?`?)([^\s`]*)(``?`?)'
+      captures:
+        1: punctuation.definition.placeholder.begin.sol
+        2: markup.raw.inline.sol
+        3: punctuation.definition.placeholder.end.sol
+    - match: '(\{\{?)([^\s\{\-\:]*)?([-:])?([^\s\}\-\:]*)?(\}\}?)'
+      captures:
+        1: punctuation.definition.placeholder.begin.sol
+        2: support.type.sol
+        3: punctuation.separator.sol
+        4: variable.function.sol
+        5: punctuation.definition.placeholder.end.sol
+    # - match: '({{id_char}}*)(#)({{id_char}}+)'
+    #   captures:
+    #     1: support.type.sol
+    #     2: punctuation.definition.placeholder.sol
+    #     3: variable.function.sol
+
+  comments-natspec-quote-blocks:
+    - match: '(```)\s*(\w*)$'
+      captures:
+        1: punctuation.definition.placeholder.begin.sol
+        2: markup.inserted.sol
+      push:
+      - match: ^\s*\*\s
+      - match: (?=^\s*\*/)
+        pop: true
+      - match: '```'
+        scope: punctuation.definition.placeholder.end.sol
+        pop: true
+      - match: .
+        scope: markup.raw.block.sol

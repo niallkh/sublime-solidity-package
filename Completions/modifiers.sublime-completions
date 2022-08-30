@@ -1,0 +1,64 @@
+{
+    "scope": "meta.function.sol, meta.event.parameters.sol",
+
+    "completions": [
+        {
+            "trigger": "public", "contents": "public",
+            "annotation": "public modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "private", "contents": "private",
+            "annotation": "private modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "internal", "contents": "internal",
+            "annotation": "internal modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "external", "contents": "external",
+            "annotation": "external modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "immutable", "contents": "immutable",
+            "annotation": "immutable modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "constant", "contents": "constant",
+            "annotation": "constant modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "view", "contents": "view",
+            "annotation": "view modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "pure", "contents": "pure",
+            "annotation": "pure modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "virtual", "contents": "virtual",
+            "annotation": "virtual modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "payable", "contents": "payable",
+            "annotation": "payable modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "override", "contents": "override${1:(${2})}",
+            "annotation": "override modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "returns", "contents": "returns (${0})",
+            "annotation": "returns", "kind": ["keyword", "m", "Modifier"]
+        },
+
+
+        {
+            "trigger": "indexed", "contents": "indexed",
+            "annotation": "indexed modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "calldata", "contents": "calldata",
+            "annotation": "calldata modifier", "kind": ["keyword", "m", "Modifier"]
+        }
+    ]
+}

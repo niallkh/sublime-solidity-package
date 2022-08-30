@@ -1,0 +1,10 @@
+{
+    "scope": "source.sol",
+
+    "completions": [
+        {
+            "trigger": "for", "contents": "for (${1:uint256 i = 0}; ${2:i < length}; ${3:i++}) {\n\t${4}\n}",
+            "annotation": "for loop", "kind": "keyword"
+        },
+    ]
+}

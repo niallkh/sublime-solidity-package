@@ -1,0 +1,86 @@
+{
+    "scope": "source.sol - meta",
+
+    "completions": [
+        {
+            "trigger": "pragma", "contents": "pragma solidity ${1:^0.8.0};${2}",
+            "annotation": "solidity version", "kind": ["keyword", "p", "Pragma"]
+        },
+        {
+            "trigger": "import", "contents": "import \"${1}\";",
+            "annotation": "import path", "kind": ["keyword", "i", "Import"]
+        },
+        {
+            "trigger": "import", "contents": "import \"${1}\" as ${2};",
+            "annotation": "import as", "kind": ["keyword", "i", "Import as"]
+        },
+        {
+            "trigger": "import", "contents": "import {${1}} from \"${2}\";",
+            "annotation": "import from", "kind": ["keyword", "i", "Import from"]
+        },
+        {
+            "trigger": "contract", "contents": "contract ${1:ContractName} {\n\t${2}\n}",
+            "annotation": "contract", "kind": ["keyword", "c", "Contract"]
+        },
+        {
+            "trigger": "interface", "contents": "interface ${1:InterfaceName} {\n\t${2}\n}",
+            "annotation": "interface", "kind": ["keyword", "c", "Contract"]
+        },
+        {
+            "trigger": "library", "contents": "library ${1:InterfaceName} {\n\t${2}\n}",
+            "annotation": "library", "kind": ["keyword", "c", "Contract"]
+        },
+        {
+            "trigger": "function", "contents": "function ${1:functionName}(${2}) external ${3:returns (${4}) }{\n\t${5}\n}",
+            "annotation": "external function", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "function", "contents": "function ${1:functionName}(${2}) public ${3:view }${4:returns (${5}) }{\n\t${6}\n}",
+            "annotation": "public function", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "function", "contents": "function _${1:functionName}(${2}) internal ${3:view }${4:returns (${5}) }{\n\t${6}\n}",
+            "annotation": "internal function", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "function", "contents": "function _${1:functionName}(${2}) private ${3:view }${4:returns (${5}) }{\n\t${6}\n}",
+            "annotation": "private function", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "modifier", "contents": "modifier ${1:modifierName}(${2}) {\n\t${3}\n\t_;\n}",
+            "annotation": "modifier", "kind": ["keyword", "m", "Modifier"]
+        },
+        {
+            "trigger": "constructor", "contents": "constructor(${1}) {\n\t${2}\n}",
+            "annotation": "constructor", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "fallback", "contents": "fallback(${1:bytes calldata input}) external ${2:payable }${3:returns (bytes memory output) }{\n\t${4}\n}",
+            "annotation": "fallback", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "receive", "contents": "receive() external payable {\n\t${1}\n}",
+            "annotation": "receive", "kind": ["keyword", "f", "Function"]
+        },
+        {
+            "trigger": "event", "contents": "event ${1:EventName}(${2});",
+            "annotation": "event", "kind": ["keyword", "e", "Event"]
+        },
+        {
+            "trigger": "type", "contents": "type ${1:TypeName} is ${2:valueType};",
+            "annotation": "type", "kind": ["keyword", "t", "Type"]
+        },
+        {
+            "trigger": "struct", "contents": "struct ${1:StructName} {\n\t${2}\n}",
+            "annotation": "struct", "kind": ["keyword", "s", "Struct"]
+        },
+        {
+            "trigger": "enum", "contents": "enum ${1:EnumName} {\n\t${2}\n}",
+            "annotation": "enum", "kind": ["keyword", "s", "Struct"]
+        },
+        {
+            "trigger": "mapping", "contents": "mapping(${1:address} => ${2:uint256})",
+            "annotation": "mapping", "kind": "type"
+        },
+    ]
+}

@@ -828,7 +828,6 @@ contexts:
 
   variable-identifier:
     - match: (\.)\s*(interfaceId|runtimeCode|creationCode|name|max|min|data|sender|sig|value|min|max|balance|code|codehash|basefee|chainid|coinbase|difficulty|gaslimit|number|timestamp|length|selector)\b
-      scope: support.constant.sol
       captures:
         1: punctuation.accessor.dot.sol
         2: support.constant.sol

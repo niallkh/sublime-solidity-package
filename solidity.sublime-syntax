@@ -696,7 +696,27 @@ contexts:
   assembly-blocks:
     - match: assembly\b
       scope: keyword.context.block.sol
-      push: assembly-block
+      push:
+        - assembly-block
+        - assembly-block-params
+
+  assembly-block-params:
+    - match: \(
+      scope: punctuation.section.group.begin.sol
+      set:
+        - assembly-block-params-body
+        - expression
+    - include: else-pop
+
+  assembly-block-params-body:
+    - meta_scope: meta.group.sol
+    - match: \)
+      scope: punctuation.section.group.end.sol
+      pop: true
+    - match: \,
+      scope: punctuation.separator.sol
+      push: expression
+    - include: else-invalid-symbol
 
   assembly-block:
     - match: \{
